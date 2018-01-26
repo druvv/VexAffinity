@@ -23,7 +23,7 @@ float rotsFor(float degrees) {
 	float wheelCircumference = 2 * PI * wheelRadius;
 	float turnCircumference = 2 * PI * turnRadius;
 
-	float degRatio = abs(degrees)/360;
+	float degRatio = abs(degrees) / 360;
 	float turnDist = degRatio * turnCircumference;
 	return turnDist / wheelCircumference;
 }
@@ -36,7 +36,7 @@ float inchesToRots(float inches) {
 // -------- ARM CONTROLS ---------
 
 void openLift() {
-	while(SensorValue[LiftRight]<4090&&SensorValue[LiftLeft]<4075){
+	while(SensorValue[LiftRight] < 4090 && SensorValue[LiftLeft] < 4075){
 		motor[RightLift] = 70;
 		motor[LeftLift] = 70;
 	}
@@ -45,7 +45,7 @@ void openLift() {
 }
 
 void closeLift() {
-	while(SensorValue[LiftRight]>3350&&SensorValue[LiftLeft]>3425){
+	while(SensorValue[LiftRight] > 3350 && SensorValue[LiftLeft] > 3425){
 		motor[RightLift] = -70;
 		motor[LeftLift] = -70;
 	}
@@ -64,7 +64,7 @@ void lowerLiftToStack() {
 	wait(0.5);
 	*/
 
-	while(SensorValue[LiftRight]>3400&&SensorValue[LiftLeft]>3500){
+	while(SensorValue[LiftRight] > 3400 && SensorValue[LiftLeft] > 3500){
 		motor[RightLift] = -70;
 		motor[LeftLift] = -70;
 	}
@@ -73,7 +73,7 @@ void lowerLiftToStack() {
 }
 
 void raiseClawLift() {
-	while(SensorValue[ClawLift1]>1300){
+	while( SensorValue[ClawLift1] > 1300){
 		motor[ClawLift] = -60;
 	}
 	motor[ClawLift] = 0;
