@@ -3,8 +3,8 @@
 #pragma config(Sensor, in5,    LiftLeft,       sensorPotentiometer)
 #pragma config(Sensor, dgtl1,  LeftEncoder,    sensorQuadEncoder)
 #pragma config(Sensor, dgtl3,  RightEncoder,   sensorQuadEncoder)
-#pragma config(Motor,  port2,           LeftDrive,     tmotorVex393_MC29, openLoop)
-#pragma config(Motor,  port3,           LeftMobile,    tmotorVex393_MC29, openLoop, reversed)
+#pragma config(Motor,  port2,           LeftDrive,     tmotorVex393_MC29, openLoop, reversed)
+#pragma config(Motor,  port3,           LeftMobile,    tmotorVex393_MC29, openLoop)
 #pragma config(Motor,  port4,           Claw,          tmotorVex393_MC29, openLoop)
 #pragma config(Motor,  port5,           LeftLift,      tmotorVex393_MC29, openLoop, reversed)
 #pragma config(Motor,  port6,           RightLift,     tmotorVex393_MC29, openLoop)
@@ -36,7 +36,7 @@ float inchesToRots(float inches) {
 // -------- ARM CONTROLS ---------
 
 void openLift() {
-	while(SensorValue[LiftRight] < 4090 && SensorValue[LiftLeft] < 4075){
+	while(SensorValue[LiftRight] < 940 && SensorValue[LiftLeft] < 1410){
 		motor[RightLift] = 70;
 		motor[LeftLift] = 70;
 	}
@@ -45,7 +45,7 @@ void openLift() {
 }
 
 void closeLift() {
-	while(SensorValue[LiftRight] > 3350 && SensorValue[LiftLeft] > 3425){
+	while(SensorValue[LiftRight] > 7 && SensorValue[LiftLeft] > 45){
 		motor[RightLift] = -70;
 		motor[LeftLift] = -70;
 	}
@@ -73,7 +73,7 @@ void lowerLiftToStack() {
 }
 
 void raiseClawLift() {
-	while( SensorValue[ClawLift1] > 1300){
+	while( SensorValue[ClawLift1] > 1900){
 		motor[ClawLift] = -60;
 	}
 	motor[ClawLift] = 0;
@@ -92,7 +92,7 @@ void openMobile(bool hasCone) {
 	if (hasCone) {
 		wait(1.5);
 	} else {
-		wait(1);
+		wait(0.9);
 	}
 	motor[LeftMobile] = 0;
 	motor[RightMobile] = 0;
@@ -272,13 +272,10 @@ task main(){
 	wait(0.5);
 	releaseCone();
 	while(shouldWait) {EndTimeSlice();}
-	// Turn 45 to face goal
-	shouldWait = true;
-	turn(-45, 90);
-	while(shouldWait) {EndTimeSlice();}
+
 	// Place mobile goal on ground
 	openMobile(true);
-	wait(0.2);
+	wait(0.25);
 	// Move backwards and close the mobile to release the cone
 	shouldWait = true;
 	move(-15,90); // <- Asynchronous
