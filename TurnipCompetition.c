@@ -377,10 +377,10 @@ task usercontrol()
 			motor[LeftLift] = 0;
 		}
 
-		if(vexRT[Btn7UXmtr2]==1 || vexRT[Btn7U]==1){
+		if(vexRT[Btn7UXmtr2]==1 || vexRT[Btn5D]==1){
 			motor[LeftMobile] = -127;
 			motor[RightMobile] = -127;
-		}else if(vexRT[Btn7DXmtr2]==1 || vexRT[Btn7D]==1){
+		}else if(vexRT[Btn7DXmtr2]==1 || vexRT[Btn5U]==1){
 			motor[LeftMobile] = 127;
 			motor[RightMobile] = 127;
 		}else{
