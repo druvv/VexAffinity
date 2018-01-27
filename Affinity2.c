@@ -35,13 +35,15 @@ float inchesToRots(float inches) {
 
 // -------- ARM CONTROLS ---------
 
-void openLift() {
+task openLift() {
 	while(SensorValue[LiftRight] < 4090 && SensorValue[LiftLeft] < 4075){
 		motor[RightLift] = 70;
 		motor[LeftLift] = 70;
 	}
 	motor[RightLift] = 0;
 	motor[LeftLift] = 0;
+	shouldWait = false;
+	EndTimeSlice();
 }
 
 void closeLift() {
@@ -240,12 +242,14 @@ void move(float inches, float speed) {
 task main(){
 	// Program Start
 	// Raise Lift, Open Up Claw and Mobile
-	openLift();
+	shouldWait = true;
+	startTask(openLift);
 	raiseClawLift();
+	while (shouldWait) {}
 
 	// Move to capture mobile goal
 	shouldWait = true;
-	move(45, 90); // <- Asynchronous
+	move(45, 110); // <- Asynchronous
 	openMobile(false);
 	while(shouldWait) {}
 
@@ -253,7 +257,7 @@ task main(){
 	closeMobile(true);
 
 	shouldWait = true;
-	move(-35, 90);
+	move(-35, 110);
 	lowerLiftToStack();
 	wait(0.5);
 	releaseCone();
@@ -265,14 +269,17 @@ task main(){
 	while(shouldWait) {}
 
 	shouldWait = true;
-	move(15,90);
+	move(22,110);
 	while(shouldWait) {}
 
+	motor[RightDrive] = 110;
+	wait(1);
+	motor[RightDrive] = 0;
 	openMobile(true);
 	wait(0.2);
 	// Move backwards and close the mobile to release the cone
 	shouldWait = true;
-	move(-15,90); // <- Asynchronous
+	move(-15,110); // <- Asynchronous
 	closeMobile(true);
 	while(shouldWait) {}
 }
