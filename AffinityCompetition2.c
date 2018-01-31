@@ -130,10 +130,11 @@ void raiseClawLift() {
 }
 
 void releaseCone() {
+	raiseClawLift();
 	motor[Claw] = -60;
 	wait(0.5);
-	raiseClawLift();
 	motor[Claw] = 0;
+	raiseClawLift();
 }
 
 void openMobile(bool hasCone) {
@@ -375,10 +376,10 @@ task usercontrol()
 			motor[LeftLift] = 0;
 		}
 
-		if(vexRT[Btn7UXmtr2]==1 || vexRT[Btn7U]==1){
+		if(vexRT[Btn7DXmtr2]==1 || vexRT[Btn7D]==1){
 			motor[LeftMobile] = -127;
 			motor[RightMobile] = -127;
-		}else if(vexRT[Btn7DXmtr2]==1 || vexRT[Btn7D]==1){
+		}else if(vexRT[Btn7UXmtr2]==1 || vexRT[Btn7U]==1){
 			motor[LeftMobile] = 127;
 			motor[RightMobile] = 127;
 		}else{

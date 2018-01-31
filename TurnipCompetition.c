@@ -132,10 +132,11 @@ void raiseClawLift() {
 }
 
 void releaseCone() {
+	raiseClawLift();
 	motor[Claw] = -60;
 	wait(0.5);
-	raiseClawLift();
 	motor[Claw] = 0;
+	raiseClawLift();
 }
 
 void openMobile(bool hasCone) {
