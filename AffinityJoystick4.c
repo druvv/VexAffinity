@@ -1,6 +1,6 @@
-#pragma config(Sensor, in2,    clawLiftPot,    sensorPotentiometer)
+#pragma config(Sensor, in2,    rightLiftPot,   sensorPotentiometer)
 #pragma config(Sensor, in3,    leftLiftPot,    sensorPotentiometer)
-#pragma config(Sensor, in4,    rightLiftPot,   sensorPotentiometer)
+#pragma config(Sensor, in4,    clawLiftPot,    sensorPotentiometer)
 #pragma config(Sensor, in5,    leftMobilePot,  sensorPotentiometer)
 #pragma config(Sensor, in6,    rightMobilePot, sensorPotentiometer)
 #pragma config(Sensor, dgtl1,  LeftEncoder,    sensorQuadEncoder)
@@ -42,17 +42,17 @@ task main()
 
 		// Mobile Lift
 
-		if (vexRT[Btn6D]) {
+		if (vexRT[Btn6D] || vexRT[Btn5DXmtr2]) {
 			motor[leftMobile] = 100;
 			motor[rightMobile] = 100;
-		} else if (vexRT[Btn5D]) {
+		} else if (vexRT[Btn5D] || vexRT[Btn5UXmtr2]) {
 			motor[leftMobile] = -100;
 			motor[rightMobile] = -100;
 		} else {
 			motor[leftMobile] = 0;
 			motor[rightMobile] = 0;
 		}
-		
+
 		// Lift
 		if (abs(vexRT[Ch3Xmtr2]) > 20) {
 			float j3 = joyStickCurve(vexRT[Ch3Xmtr2]);
@@ -62,7 +62,7 @@ task main()
 			motor[leftLift] = 0;
 			motor[rightLift] = 0;
 		}
-		
+
 		// Claw Lift
 		if (abs(vexRT[Ch2Xmtr2]) > 20) {
 			float j2 = joyStickCurve(vexRT[Ch2Xmtr2]);
@@ -70,20 +70,17 @@ task main()
 		} else {
 			motor[clawLift] = 0;
 		}
-		
+
 		// Claw
-		if (vexRT[Btn5DXmtr2]) {
-			motor[claw] = -100;	
+		if (vexRT[Btn6UXmtr2]) {
+			motor[claw] = -100;
 		} else if (vexRT[Btn6DXmtr2]) {
 			motor[claw] = 100;
 		} else {
 			motor[claw] = 0;
 		}
-		
-		
-	}
-	
-	
 
+
+	}
 
 }
