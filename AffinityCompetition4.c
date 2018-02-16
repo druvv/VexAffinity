@@ -126,9 +126,11 @@ void raiseClawLift() {
 
 void releaseCone() {
 	raiseClawLift();
+	motor[clawLift] = 30;
 	motor[claw] = 100;
 	wait(0.5);
 	motor[claw] = 0;
+	motor[clawLift] = 0;
 }
 
 void openMobile(bool hasCone) {
@@ -301,17 +303,17 @@ task autonomous()
 
 	// Move to capture mobile goal
 	shouldWait = true;
-	move(45, 110); // <- Asynchronous
+	move(50, 110); // <- Asynchronous
 	openMobile(false);
 	while(shouldWait) {}
 
-	wait(0.5);
+//	wait(0.2);
 	closeMobile();
 
 	shouldWait = true;
 	move(-35, 110);
 	lowerLiftToStack();
-	wait(0.5);
+//	wait(0.2);
 	releaseCone();
 	while(shouldWait) {}
 
@@ -326,13 +328,16 @@ task autonomous()
 
 	motor[rightDrive] = 110;
 	motor[leftDrive] = -30;
-	wait(1);
+	wait(0.6);
 	motor[leftDrive] = 100;
-	wait(1);
+	wait(2);
 	motor[leftDrive] = 0;
 	motor[rightDrive] = 0;
-	openMobile(true);
+	shouldWait = true;
+	startTask(openLift);
 	wait(0.2);
+	openMobile(false);
+	while(shouldWait){}
 	// Move backwards and close the mobile to release the cone
 	shouldWait = true;
 	move(-15,110); // <- Asynchronous
@@ -364,9 +369,9 @@ task usercontrol()
 
   while(true) {
 		// Arcade Controls
-		int c3 =  -(vexRT[Ch3]);
+		int c1 =  vexRT[Ch3];
+		int c3 = -vexRT[Ch1];
 		int j3 = joyStickCurve(c3);
-		int c1 = vexRT[Ch1];
 		int j1 = joyStickCurve(c1);
 
 		if(((c1>20||c1<-20)||(c3>20||c3<-20))){
