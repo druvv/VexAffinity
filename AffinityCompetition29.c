@@ -69,6 +69,8 @@ void pre_auton()
 float wheelRadius = 2;
 float turnRadius = 5.4;
 bool shouldWait = false;
+bool shouldWait2 = false;
+bool shouldWait3 = false;
 
 // -------- CALCULATIONS ---------
 
@@ -90,12 +92,12 @@ float inchesToRots(float inches) {
 
 task openLift() {
 	while(SensorValue[rightLiftPot] > 3010 && SensorValue[leftLiftPot] > 520){
-		motor[rightLift] = 120;
-		motor[leftLift] = 120;
+		motor[rightLift] = 90;
+		motor[leftLift] = 90;
 	}
 	motor[rightLift] = 0;
 	motor[leftLift] = 0;
-	shouldWait = false;
+	shouldWait2 = false;
 	EndTimeSlice();
 }
 
@@ -118,10 +120,30 @@ void lowerLiftToStack() {
 	motor[leftLift] = 0;
 }
 
-void raiseClawLift() {
+task raiseClawLiftTask() {
 	while( SensorValue[clawLiftPot] < 2600){
 		motor[clawLift] = 120;
 	}
+	motor[clawLift] = 0;
+	shouldWait3 = false;
+	EndTimeSlice();
+}
+
+void raiseClawLift() {
+	startTask(raiseClawLiftTask);
+}
+
+void lowerClawLiftAndGrabSecondCone() {
+	motor[claw] = -100;
+	while (SensorValue[clawLiftPot] > 620) {
+		motor[clawLift] = -60;
+	}
+	motor[rightLift] = -100;
+	motor[leftLift] = -100;
+	wait(0.1);
+	motor[rightLift] = 0;
+	motor[leftLift] = 0;
+	motor[claw] = 0;
 	motor[clawLift] = 0;
 }
 
@@ -186,6 +208,7 @@ task turnME() {
 
 
 	// TODO: Test which turn method is more accurate
+
 
 
 	// Normal Turn Method
@@ -254,6 +277,13 @@ task moveME() {
 		direction = -1;
 	}
 
+	while(abs(SensorValue[LeftEncoder]) < rotDegrees) {
+		motor[rightDrive] = moveSpeed * direction;
+		motor[leftDrive] = moveSpeed * direction;
+	}
+
+	/*
+
 	// Auto-Straigtening
 	while (abs(SensorValue[LeftEncoder]) < rotDegrees) {
 		// If the left side is farther ahead, speed up the right side
@@ -274,6 +304,7 @@ task moveME() {
 			motor[leftDrive] = moveSpeed * direction;
 		}
 	}
+	*/
 
 	// Stop Motors
 	motor[leftDrive] = 0;
@@ -297,28 +328,49 @@ task autonomous()
 
   // Program Start
 	// Raise Lift, Open Up Claw and Mobile
-	shouldWait = true;
-	startTask(openLift);
-	raiseClawLift();
-	while (shouldWait) {}
+
+	bool isLeft = SensorValue[directionPot] > 2000;
 
 	// Move to capture mobile goal
 	shouldWait = true;
-	move(50, 110); // <- Asynchronous
+	shouldWait2 = true;
+	shouldWait3 = true;
+	startTask(openLift);
+	move(50, 70); // <- Asynchronous
+	raiseClawLift();
+	wait(0.2);
 	openMobile(false);
-	while(shouldWait) {}
+	while(shouldWait || shouldWait2 || shouldWait3) {}
 
-//	wait(0.2);
+
 	closeMobile();
+	lowerLiftToStack();
+	releaseCone();
+	shouldWait = true;
+	move(3, 110);
+	lowerClawLiftAndGrabSecondCone();
+	while(shouldWait) {}
+	motor[rightLift] = 100;
+	motor[leftLift] = 100;
+	if (isLeft) {
+		motor[rightDrive] = -100;
+	} else {
+		motor[leftDrive] = -100;
+	}
+	wait(0.1);
+	motor[rightDrive] = 0;
+	motor[leftDrive] = 0;
+	wait(0.1);
+	motor[rightLift] = 0;
+	motor[leftLift] = 0;
 
 	shouldWait = true;
-	move(-38, 110);
-	lowerLiftToStack();
-//	wait(0.2);
+	move(-42, 110);
+	raiseClawLift();
 	releaseCone();
 	while(shouldWait) {}
 
-	bool isLeft = SensorValue[directionPot] > 2000;
+
 	// Turn
 	shouldWait = true;
 	if (isLeft) {
@@ -329,14 +381,14 @@ task autonomous()
 	while(shouldWait) {}
 
 	shouldWait = true;
-	move(16,110);
+	move(27,110);
 	while(shouldWait) {}
 
 	if (isLeft) {
 		motor[leftDrive] = 110;
-		motor[rightDrive] = -15;
+		motor[rightDrive] = -30;
 	} else {
-		motor[leftDrive] = -15;
+		motor[leftDrive] = -30;
 		motor[rightDrive] = 110;
 	}
 	wait(0.6);
