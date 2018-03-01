@@ -4,6 +4,7 @@
 #pragma config(Sensor, in5,    leftMobilePot,  sensorPotentiometer)
 #pragma config(Sensor, in6,    rightMobilePot, sensorPotentiometer)
 #pragma config(Sensor, in7,    directionPot,   sensorPotentiometer)
+#pragma config(Sensor, in8,    pointPot,       sensorPotentiometer)
 #pragma config(Sensor, dgtl1,  LeftEncoder,    sensorQuadEncoder)
 #pragma config(Sensor, dgtl3,  RightEncoder,   sensorQuadEncoder)
 #pragma config(Motor,  port2,           leftDrive,     tmotorVex393_MC29, openLoop)
@@ -71,6 +72,7 @@ float turnRadius = 5.4;
 bool shouldWait = false;
 bool shouldWait2 = false;
 bool shouldWait3 = false;
+bool shouldWaitForLift = false;
 
 // -------- CALCULATIONS ---------
 
@@ -110,18 +112,24 @@ void closeLift() {
 	motor[leftLift] = 0;
 }
 
-void lowerLiftToStack() {
-
-	while(SensorValue[leftLiftPot] < 1230 && SensorValue[rightLiftPot] > 1260){
+task lowerLiftToStackTask() {
+	wait(0.35);
+	while(SensorValue[leftLiftPot] < 1250 && SensorValue[rightLiftPot] > 1240){
 		motor[rightLift] = -70;
 		motor[leftLift] = -70;
 	}
 	motor[rightLift] = 0;
 	motor[leftLift] = 0;
+	shouldWaitForLift = false;
+	EndTimeSlice();
+}
+
+void lowerLiftToStack() {
+	startTask(lowerLiftToStackTask);
 }
 
 task raiseClawLiftTask() {
-	while( SensorValue[clawLiftPot] < 2600){
+	while( SensorValue[clawLiftPot] < 2620){
 		motor[clawLift] = 120;
 	}
 	motor[clawLift] = 0;
@@ -135,31 +143,28 @@ void raiseClawLift() {
 
 void lowerClawLiftAndGrabSecondCone() {
 	motor[claw] = -100;
-	while (SensorValue[clawLiftPot] > 620) {
+	while (SensorValue[clawLiftPot] > 630) {
 		motor[clawLift] = -60;
 	}
-	motor[rightLift] = -100;
-	motor[leftLift] = -100;
-	wait(0.1);
-	motor[rightLift] = 0;
-	motor[leftLift] = 0;
-	motor[claw] = 0;
 	motor[clawLift] = 0;
+	motor[claw] = 0;
 }
 
 void releaseCone() {
+	shouldWait3 = true;
 	raiseClawLift();
-	motor[clawLift] = 30;
+	while(shouldWait3) {}
+	motor[clawLift] = 40;
 	motor[claw] = 100;
 	wait(0.5);
-	motor[claw] = 0;
 	motor[clawLift] = 0;
+	motor[claw] = 0;
 }
 
 void openMobile(bool hasCone) {
 	if (hasCone) {
-		motor[leftMobile] = 100;
-		motor[rightMobile] = 100;
+		motor[leftMobile] = 127;
+		motor[rightMobile] = 127;
 		wait(1);
 		motor[leftMobile] = 0;
 		motor[rightMobile] = 0;
@@ -167,8 +172,8 @@ void openMobile(bool hasCone) {
 	}
 
 	while (SensorValue[leftMobilePot] > 1580 || SensorValue[rightMobilePot] > 740) {
-		motor[leftMobile] = 100;
-		motor[rightMobile] = 100;
+		motor[leftMobile] = 127;
+		motor[rightMobile] = 127;
 	}
 
 	motor[rightMobile] = 0;
@@ -177,8 +182,8 @@ void openMobile(bool hasCone) {
 
 void closeMobile() {
 	while (SensorValue[leftMobilePot] < 4060 || SensorValue[rightMobilePot] < 2880) {
-		motor[leftMobile] = -100;
-		motor[rightMobile] = -100;
+		motor[leftMobile] = -127;
+		motor[rightMobile] = -127;
 	}
 	motor[rightMobile] = 0;
 	motor[leftMobile] = 0;
@@ -276,26 +281,27 @@ task moveME() {
 		} else {
 		direction = -1;
 	}
-
+	/*
 	while(abs(SensorValue[LeftEncoder]) < rotDegrees) {
 		motor[rightDrive] = moveSpeed * direction;
 		motor[leftDrive] = moveSpeed * direction;
 	}
+	*/
 
-	/*
+	int fix = 40;
 
 	// Auto-Straigtening
 	while (abs(SensorValue[LeftEncoder]) < rotDegrees) {
 		// If the left side is farther ahead, speed up the right side
 		if (abs(SensorValue[LeftEncoder]) > abs(SensorValue[RightEncoder])) {
-			motor[rightDrive] = (moveSpeed + 10) * direction;
-			motor[leftDrive] = moveSpeed * direction;
+			motor[rightDrive] = moveSpeed * direction;
+			motor[leftDrive] = (moveSpeed - fix) * direction;
 		}
 
 		// If the right side is farther ahead, speed up the left side
 		if (abs(SensorValue[LeftEncoder]) < abs(SensorValue[RightEncoder])) {
-			motor[rightDrive] = moveSpeed * direction;
-			motor[leftDrive] = (moveSpeed + 10) * direction;
+			motor[rightDrive] = (moveSpeed - fix) * direction;
+			motor[leftDrive] = moveSpeed * direction;
 		}
 
 		// If they are both at equal distances, drive straight ahead.
@@ -304,7 +310,6 @@ task moveME() {
 			motor[leftDrive] = moveSpeed * direction;
 		}
 	}
-	*/
 
 	// Stop Motors
 	motor[leftDrive] = 0;
@@ -330,43 +335,48 @@ task autonomous()
 	// Raise Lift, Open Up Claw and Mobile
 
 	bool isLeft = SensorValue[directionPot] > 2000;
+	bool isTwenty = SensorValue[pointPot] > 2000;
 
 	// Move to capture mobile goal
 	shouldWait = true;
 	shouldWait2 = true;
 	shouldWait3 = true;
 	startTask(openLift);
-	move(50, 70); // <- Asynchronous
+	move(50, 110); // <- Asynchronous
 	raiseClawLift();
 	wait(0.2);
 	openMobile(false);
 	while(shouldWait || shouldWait2 || shouldWait3) {}
 
-
-	closeMobile();
+	shouldWaitForLift = true;
+	shouldWait3 = true;
 	lowerLiftToStack();
+	raiseClawLift();
+	closeMobile();
+	while (shouldWaitForLift || shouldWait3) {}
+
 	releaseCone();
+
 	shouldWait = true;
 	move(3, 110);
 	lowerClawLiftAndGrabSecondCone();
 	while(shouldWait) {}
+
 	motor[rightLift] = 100;
 	motor[leftLift] = 100;
-	if (isLeft) {
-		motor[rightDrive] = -100;
-	} else {
-		motor[leftDrive] = -100;
-	}
-	wait(0.1);
-	motor[rightDrive] = 0;
-	motor[leftDrive] = 0;
-	wait(0.1);
+	wait(0.3);
 	motor[rightLift] = 0;
 	motor[leftLift] = 0;
 
 	shouldWait = true;
+	shouldWait3 = true;
+
 	move(-42, 110);
 	raiseClawLift();
+	while(shouldWait3) {}
+	shouldWaitForLift = true;
+	lowerLiftToStack();
+	while(shouldWaitForLift) {}
 	releaseCone();
 	while(shouldWait) {}
 
@@ -381,30 +391,39 @@ task autonomous()
 	while(shouldWait) {}
 
 	shouldWait = true;
-	move(27,110);
+	if (isTwenty) {
+		move(24,120);
+	} else {
+		move(12,120);
+	}
 	while(shouldWait) {}
 
 	if (isLeft) {
 		motor[leftDrive] = 110;
-		motor[rightDrive] = -30;
+		motor[rightDrive] = -45;
 	} else {
-		motor[leftDrive] = -30;
+		motor[leftDrive] = -65;
 		motor[rightDrive] = 110;
 	}
 	wait(0.6);
 	if (isLeft) {
-		motor[rightDrive] = 100;
+			motor[rightDrive] = 110;
 	} else {
-		motor[leftDrive] = 100;
+			motor[leftDrive] = 110;
 	}
-	wait(2);
+
+	shouldWait2 = true;
+	startTask(openLift);
+	if (isTwenty) {
+		wait(1.5);
+	} else {
+		wait(0.4);
+	}
 	motor[leftDrive] = 0;
 	motor[rightDrive] = 0;
-	shouldWait = true;
-	startTask(openLift);
-	wait(0.2);
+	while(shouldWait2) {}
 	openMobile(false);
-	while(shouldWait){}
+	while(shouldWait2){}
 	// Move backwards and close the mobile to release the cone
 	shouldWait = true;
 	move(-15,110); // <- Asynchronous
