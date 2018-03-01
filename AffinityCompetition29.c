@@ -364,7 +364,13 @@ task autonomous()
 
 	motor[rightLift] = 100;
 	motor[leftLift] = 100;
+	if (isLeft) {
+		motor[rightDrive] = -50;
+	}
 	wait(0.3);
+	if (isLeft) {
+		motor[rightDrive] = -50;
+	}
 	motor[rightLift] = 0;
 	motor[leftLift] = 0;
 
